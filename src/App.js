@@ -13,6 +13,8 @@ import SIGNUP from "./pages/SIGNUP";
 import LOGIN from "./pages/LOGIN";
 import Profile from "./pages/Profile";
 import RESUME from "./pages/RESUME";
+import CHECK from "./pages/CHECK";
+import INTERVIEW from "./pages/INTERVIEW";
 
 function App() {
   const action = useNavigationType();
@@ -62,6 +64,14 @@ function App() {
         title = "";
         metaDescription = "";
         break;
+      case "/check":
+        title = "";
+        metaDescription = "";
+        break;
+      case "/interview":
+        title = "";
+        metaDescription = "";
+        break;
     }
 
     if (title) {
@@ -88,6 +98,8 @@ function App() {
       <Route path="/login" element={<LOGIN />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/resume" element={<RESUME />} />
+      <Route path="/check" element={<CHECK />} />
+      <Route path="/interview" element={<INTERVIEW />} />
     </Routes>
   );
 }
