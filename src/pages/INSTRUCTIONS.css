@@ -1,0 +1,52 @@
+.instructions-page {
+    display: flex;
+    flex-direction: column;
+  }
+  .instructions-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-grow: 1;
+    justify-content: center;
+    padding: 2rem;
+    padding-top: 1rem;
+    margin: 5rem 15rem;
+    margin-top:0rem;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    /* text-align: center; */
+    }
+  
+  .instructions-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #333;
+  }
+  
+  .instructions-list {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+  }
+  
+  .instructions-list li {
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    color: #555;
+  }
+
+  .continue-button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 50px;
+    background-color: #2196f3;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 1rem;
+  }
+  
+  .continue-button:hover {
+    background-color: #1976d2;
+  }
