@@ -48,9 +48,9 @@ const LOGIN = () => {
     if (!validate()) return;
 
     try {
-      const encryptedPassword = encryptPassword(formData.password);
-      formData.password = encryptedPassword;
-      console.log(encryptedPassword);
+      // const encryptedPassword = encryptPassword(formData.password);
+      // formData.password = encryptedPassword;
+      // console.log(encryptedPassword);
       Loginuser(formData);
       const response = await axios.post('http://127.0.0.1:5000/login', formData);
       console.log('Login Success:', response.data);
@@ -116,8 +116,8 @@ const LOGIN = () => {
                   onChange={handleChange}
                 >
                   <option value="user">User</option>
-                  <option value="recruiter">Recruiter</option>
-                  <option value="admin">Admin</option>
+                  <option value="recruiter">Recruiter</option> 
+                  <option value="admin">Admin</option> 
                 </select>
                 {errors.role && <p className="error-message">{errors.role}</p>}
               </div>

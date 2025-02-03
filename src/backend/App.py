@@ -61,9 +61,13 @@ def signup():
     # Check if the email already exists
     if users_collection.find_one({'email': email}):
         return jsonify({'error': 'User already exists'}), 409
+    
+    # print(password,"*************************")
 
     # Hash the password
-    password_hash = generate_password_hash(password, method='pbkdf2:sha256')
+    # password_hash = generate_password_hash(password, method='pbkdf2:sha256')
+    
+    password_hash = password
 
     # Create common user data with role
     user_data = {
@@ -74,6 +78,7 @@ def signup():
         'role': role
     }
 
+    print(password_hash,"****************************")
     # Role-based logic: If recruiter, add to Check_list; if user, add to UsersDetails
     if role == 'recruiter':
         company_name = data.get('company_name')
@@ -124,7 +129,7 @@ def login():
     data = request.get_json()
     email = data.get('mail')
     global_mail = email
-    encrypted_password = data.get('password')
+    password = data.get('password')
     role = data.get('role')  # Retrieve the role from the request
     
     if role=="admin":
@@ -133,29 +138,25 @@ def login():
 
     print(data)
     
-    # Decrypt the password
-    try:
-        password = decrypt_password(encrypted_password)
-    except Exception as e:
-        return jsonify({'error': 'Decryption failed'}), 400
+   
     
     # Check if email, password, and role are provided
     if not email or not password or not role:
         return jsonify({'error': 'email, password, and role are required'}), 400
-    
-    
-    
     # Find the user by email
     if role=="user":
         user = users_collection.find_one({'email': email})
     elif role=="recruiter":
         user = main_recruiters_collection.find_one({'email': email})
     
+    print(user)
     # Check if the user exists, if password is correct, and if the role matches
     if not user:
         return jsonify({'error': 'Invalid credentials'}), 401
     
-    if not check_password_hash(user['password_hash'], password):
+    if user['password_hash']!=password:
+        
+        
         return jsonify({'error': 'Invalid credentials'}), 401
     
     if user.get('role') != role:  # Check if the role matches
@@ -265,7 +266,7 @@ def fun(q):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
-        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik53ek53TmV1R3ptcFZTQjNVZ0J4ZyJ9.eyJodHRwczovL2QtaWQuY29tL2ZlYXR1cmVzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX2N1c3RvbWVyX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9uYW1lIjoidHJpYWwiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9zdWJzY3JpcHRpb25faWQiOiIiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9iaWxsaW5nX2ludGVydmFsIjoibW9udGgiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9wbGFuX2dyb3VwIjoiZGVpZC10cmlhbCIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX3ByaWNlX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJpY2VfY3JlZGl0cyI6IiIsImh0dHBzOi8vZC1pZC5jb20vY2hhdF9zdHJpcGVfc3Vic2NyaXB0aW9uX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9jcmVkaXRzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vcHJvdmlkZXIiOiJnb29nbGUtb2F1dGgyIiwiaHR0cHM6Ly9kLWlkLmNvbS9pc19uZXciOmZhbHNlLCJodHRwczovL2QtaWQuY29tL2FwaV9rZXlfbW9kaWZpZWRfYXQiOiIyMDI0LTA5LTE4VDEwOjEzOjAzLjA2NFoiLCJodHRwczovL2QtaWQuY29tL29yZ19pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vYXBwc192aXNpdGVkIjpbIlN0dWRpbyJdLCJodHRwczovL2QtaWQuY29tL2N4X2xvZ2ljX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jcmVhdGlvbl90aW1lc3RhbXAiOiIyMDI0LTA5LTE4VDEwOjExOjUwLjY5NFoiLCJodHRwczovL2QtaWQuY29tL2FwaV9nYXRld2F5X2tleV9pZCI6InJpMzBlZDkxd2giLCJodHRwczovL2QtaWQuY29tL3VzYWdlX2lkZW50aWZpZXJfa2V5IjoidThUclJzMllRRURHQnAtNjBvdXdYIiwiaHR0cHM6Ly9kLWlkLmNvbS9oYXNoX2tleSI6ImwtM0VjaExoa05VQjlCaTFrVlRCTiIsImh0dHBzOi8vZC1pZC5jb20vcHJpbWFyeSI6dHJ1ZSwiaHR0cHM6Ly9kLWlkLmNvbS9lbWFpbCI6InN1cnlhdGVqYWNod2FwcEBnbWFpbC5jb20iLCJodHRwczovL2QtaWQuY29tL3BheW1lbnRfcHJvdmlkZXIiOiJzdHJpcGUiLCJpc3MiOiJodHRwczovL2F1dGguZC1pZC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMDEzMDA2MDA0OTAxOTg4MDQ3MzciLCJhdWQiOlsiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS9hcGkvdjIvIiwiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3MjY2NTQ0MjgsImV4cCI6MTcyNjc0MDgyOCwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCByZWFkOmN1cnJlbnRfdXNlciB1cGRhdGU6Y3VycmVudF91c2VyX21ldGFkYXRhIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiR3pyTkkxT3JlOUZNM0VlRFJmM20zejNUU3cwSmxSWXEifQ.NghadGW4JVLD2QWq2DXsIGy7fOTelAshxdmPsAoj2xV8IDuAVT1aChDpVbcpmNH5ZLeu7Y72ZfwDjYdcDDj6f2zT3KDjxy4ekc9DsyOODkcCmWm_SCNlvCPRgOJdaOUFG_-jguoHw8M_YOap6qsabSELzWwBiZJFa1QT6HbEYmMudDT3sjvKGVmG38AmJcBtpUFHthZJFsYAwWTxI0IASMRvtn4fgovfGvZfyrphFaQ6-eK1B12pkghL5EAkjcgo7PJm45GwGXo0A33ml9ypC87WxXwPGAHo59GKb4OaVSFXXLI79mL4cI-5BwmGXbth4z7FEOEOxf4ke8fYTt9uxQ"
+        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik53ek53TmV1R3ptcFZTQjNVZ0J4ZyJ9.eyJodHRwczovL2QtaWQuY29tL2ZlYXR1cmVzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX2N1c3RvbWVyX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9uYW1lIjoidHJpYWwiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9zdWJzY3JpcHRpb25faWQiOiIiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9iaWxsaW5nX2ludGVydmFsIjoibW9udGgiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9wbGFuX2dyb3VwIjoiZGVpZC10cmlhbCIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX3ByaWNlX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJpY2VfY3JlZGl0cyI6IiIsImh0dHBzOi8vZC1pZC5jb20vY2hhdF9zdHJpcGVfc3Vic2NyaXB0aW9uX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9jcmVkaXRzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vcHJvdmlkZXIiOiJnb29nbGUtb2F1dGgyIiwiaHR0cHM6Ly9kLWlkLmNvbS9pc19uZXciOmZhbHNlLCJodHRwczovL2QtaWQuY29tL2FwaV9rZXlfbW9kaWZpZWRfYXQiOiIiLCJodHRwczovL2QtaWQuY29tL29yZ19pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vYXBwc192aXNpdGVkIjpbIlN0dWRpbyJdLCJodHRwczovL2QtaWQuY29tL2N4X2xvZ2ljX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jcmVhdGlvbl90aW1lc3RhbXAiOiIyMDI0LTExLTEyVDE2OjU1OjQ5LjAxM1oiLCJodHRwczovL2QtaWQuY29tL2FwaV9nYXRld2F5X2tleV9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vaGFzaF9rZXkiOiJvY2hPWFdpenkyVS15SlNidnB3dHUiLCJodHRwczovL2QtaWQuY29tL3ByaW1hcnkiOnRydWUsImh0dHBzOi8vZC1pZC5jb20vZW1haWwiOiJjaGl0dGlwcm9sdXN1cnlhdGVqYTA0QGdtYWlsLmNvbSIsImh0dHBzOi8vZC1pZC5jb20vY291bnRyeV9jb2RlIjoiSU4iLCJodHRwczovL2QtaWQuY29tL3BheW1lbnRfcHJvdmlkZXIiOiJzdHJpcGUiLCJpc3MiOiJodHRwczovL2F1dGguZC1pZC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMDUxNTc4OTMwMzk2NzY2ODk4ODUiLCJhdWQiOlsiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS9hcGkvdjIvIiwiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3MzE0MzA2MDEsImV4cCI6MTczMTUxNzAwMSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCByZWFkOmN1cnJlbnRfdXNlciB1cGRhdGU6Y3VycmVudF91c2VyX21ldGFkYXRhIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiR3pyTkkxT3JlOUZNM0VlRFJmM20zejNUU3cwSmxSWXEifQ.Z1LRqDiBosBXdUFgCP3ACCG-4Wy0JzoRmLafTaBXfw1w720yqxr_J5H9fjEQxmIExh6sjWcJltvQ4abUNLljyOX7x6V7qhQiBg370QVNGgkjwFP3YCIq1BXji7W9P5j8hfrPDcSjRh18XPtVn3-UfHVcZHPKA-al_hDj0BG0BtpyBAQ7U9-6cbtP0ko3YECl-LHBS7mETIVw5r-f2A_Db5LYNAfUBtf2dmJzW98Qcsvs81iVEXJXkNavEatPDwwcmi6s8uU54s__fTBVGypJ62jNoUQjZCxoSGZsl1kDNglq6T_oj4QccLMLiiL5bXmG7DKvfTikgS_rFe7PoRy40A"
 
     }
 
@@ -282,7 +283,7 @@ def fun(q):
     print(url)
     headers = {
         "accept": "application/json",
-        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik53ek53TmV1R3ptcFZTQjNVZ0J4ZyJ9.eyJodHRwczovL2QtaWQuY29tL2ZlYXR1cmVzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX2N1c3RvbWVyX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9uYW1lIjoidHJpYWwiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9zdWJzY3JpcHRpb25faWQiOiIiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9iaWxsaW5nX2ludGVydmFsIjoibW9udGgiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9wbGFuX2dyb3VwIjoiZGVpZC10cmlhbCIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX3ByaWNlX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJpY2VfY3JlZGl0cyI6IiIsImh0dHBzOi8vZC1pZC5jb20vY2hhdF9zdHJpcGVfc3Vic2NyaXB0aW9uX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9jcmVkaXRzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vcHJvdmlkZXIiOiJnb29nbGUtb2F1dGgyIiwiaHR0cHM6Ly9kLWlkLmNvbS9pc19uZXciOmZhbHNlLCJodHRwczovL2QtaWQuY29tL2FwaV9rZXlfbW9kaWZpZWRfYXQiOiIyMDI0LTA5LTE4VDEwOjEzOjAzLjA2NFoiLCJodHRwczovL2QtaWQuY29tL29yZ19pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vYXBwc192aXNpdGVkIjpbIlN0dWRpbyJdLCJodHRwczovL2QtaWQuY29tL2N4X2xvZ2ljX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jcmVhdGlvbl90aW1lc3RhbXAiOiIyMDI0LTA5LTE4VDEwOjExOjUwLjY5NFoiLCJodHRwczovL2QtaWQuY29tL2FwaV9nYXRld2F5X2tleV9pZCI6InJpMzBlZDkxd2giLCJodHRwczovL2QtaWQuY29tL3VzYWdlX2lkZW50aWZpZXJfa2V5IjoidThUclJzMllRRURHQnAtNjBvdXdYIiwiaHR0cHM6Ly9kLWlkLmNvbS9oYXNoX2tleSI6ImwtM0VjaExoa05VQjlCaTFrVlRCTiIsImh0dHBzOi8vZC1pZC5jb20vcHJpbWFyeSI6dHJ1ZSwiaHR0cHM6Ly9kLWlkLmNvbS9lbWFpbCI6InN1cnlhdGVqYWNod2FwcEBnbWFpbC5jb20iLCJodHRwczovL2QtaWQuY29tL3BheW1lbnRfcHJvdmlkZXIiOiJzdHJpcGUiLCJpc3MiOiJodHRwczovL2F1dGguZC1pZC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMDEzMDA2MDA0OTAxOTg4MDQ3MzciLCJhdWQiOlsiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS9hcGkvdjIvIiwiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3MjY2NTQ0MjgsImV4cCI6MTcyNjc0MDgyOCwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCByZWFkOmN1cnJlbnRfdXNlciB1cGRhdGU6Y3VycmVudF91c2VyX21ldGFkYXRhIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiR3pyTkkxT3JlOUZNM0VlRFJmM20zejNUU3cwSmxSWXEifQ.NghadGW4JVLD2QWq2DXsIGy7fOTelAshxdmPsAoj2xV8IDuAVT1aChDpVbcpmNH5ZLeu7Y72ZfwDjYdcDDj6f2zT3KDjxy4ekc9DsyOODkcCmWm_SCNlvCPRgOJdaOUFG_-jguoHw8M_YOap6qsabSELzWwBiZJFa1QT6HbEYmMudDT3sjvKGVmG38AmJcBtpUFHthZJFsYAwWTxI0IASMRvtn4fgovfGvZfyrphFaQ6-eK1B12pkghL5EAkjcgo7PJm45GwGXo0A33ml9ypC87WxXwPGAHo59GKb4OaVSFXXLI79mL4cI-5BwmGXbth4z7FEOEOxf4ke8fYTt9uxQ"
+        "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik53ek53TmV1R3ptcFZTQjNVZ0J4ZyJ9.eyJodHRwczovL2QtaWQuY29tL2ZlYXR1cmVzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX2N1c3RvbWVyX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJvZHVjdF9uYW1lIjoidHJpYWwiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9zdWJzY3JpcHRpb25faWQiOiIiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9iaWxsaW5nX2ludGVydmFsIjoibW9udGgiLCJodHRwczovL2QtaWQuY29tL3N0cmlwZV9wbGFuX2dyb3VwIjoiZGVpZC10cmlhbCIsImh0dHBzOi8vZC1pZC5jb20vc3RyaXBlX3ByaWNlX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9zdHJpcGVfcHJpY2VfY3JlZGl0cyI6IiIsImh0dHBzOi8vZC1pZC5jb20vY2hhdF9zdHJpcGVfc3Vic2NyaXB0aW9uX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9jcmVkaXRzIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jaGF0X3N0cmlwZV9wcmljZV9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vcHJvdmlkZXIiOiJnb29nbGUtb2F1dGgyIiwiaHR0cHM6Ly9kLWlkLmNvbS9pc19uZXciOmZhbHNlLCJodHRwczovL2QtaWQuY29tL2FwaV9rZXlfbW9kaWZpZWRfYXQiOiIiLCJodHRwczovL2QtaWQuY29tL29yZ19pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vYXBwc192aXNpdGVkIjpbIlN0dWRpbyJdLCJodHRwczovL2QtaWQuY29tL2N4X2xvZ2ljX2lkIjoiIiwiaHR0cHM6Ly9kLWlkLmNvbS9jcmVhdGlvbl90aW1lc3RhbXAiOiIyMDI0LTExLTEyVDE2OjU1OjQ5LjAxM1oiLCJodHRwczovL2QtaWQuY29tL2FwaV9nYXRld2F5X2tleV9pZCI6IiIsImh0dHBzOi8vZC1pZC5jb20vaGFzaF9rZXkiOiJvY2hPWFdpenkyVS15SlNidnB3dHUiLCJodHRwczovL2QtaWQuY29tL3ByaW1hcnkiOnRydWUsImh0dHBzOi8vZC1pZC5jb20vZW1haWwiOiJjaGl0dGlwcm9sdXN1cnlhdGVqYTA0QGdtYWlsLmNvbSIsImh0dHBzOi8vZC1pZC5jb20vY291bnRyeV9jb2RlIjoiSU4iLCJodHRwczovL2QtaWQuY29tL3BheW1lbnRfcHJvdmlkZXIiOiJzdHJpcGUiLCJpc3MiOiJodHRwczovL2F1dGguZC1pZC5jb20vIiwic3ViIjoiZ29vZ2xlLW9hdXRoMnwxMDUxNTc4OTMwMzk2NzY2ODk4ODUiLCJhdWQiOlsiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS9hcGkvdjIvIiwiaHR0cHM6Ly9kLWlkLnVzLmF1dGgwLmNvbS91c2VyaW5mbyJdLCJpYXQiOjE3MzE0MzA2MDEsImV4cCI6MTczMTUxNzAwMSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCByZWFkOmN1cnJlbnRfdXNlciB1cGRhdGU6Y3VycmVudF91c2VyX21ldGFkYXRhIG9mZmxpbmVfYWNjZXNzIiwiYXpwIjoiR3pyTkkxT3JlOUZNM0VlRFJmM20zejNUU3cwSmxSWXEifQ.Z1LRqDiBosBXdUFgCP3ACCG-4Wy0JzoRmLafTaBXfw1w720yqxr_J5H9fjEQxmIExh6sjWcJltvQ4abUNLljyOX7x6V7qhQiBg370QVNGgkjwFP3YCIq1BXji7W9P5j8hfrPDcSjRh18XPtVn3-UfHVcZHPKA-al_hDj0BG0BtpyBAQ7U9-6cbtP0ko3YECl-LHBS7mETIVw5r-f2A_Db5LYNAfUBtf2dmJzW98Qcsvs81iVEXJXkNavEatPDwwcmi6s8uU54s__fTBVGypJ62jNoUQjZCxoSGZsl1kDNglq6T_oj4QccLMLiiL5bXmG7DKvfTikgS_rFe7PoRy40A"
     }
 
     response = requests.get(url, headers=headers).json()
@@ -427,13 +428,20 @@ def analyse():
     print(BQandA)
     # chat model is now not available in free version
     project_score,project_rec = analysis.project_pre_analysis(total_data)
+    print("*************project_score************")
+    print(project_score)
+    print("*************project_rec************")
+    print(project_rec)
     TQandA = {'So, tell me about your "Finger Print Voting System using Web Development." How did you go about ensuring the security and accuracy of the fingerprint recognition system? \n': 'not use any security things in our project it was just the UI part we have designed so far so will be working on it later in the latest stages of our course', 'What specific UI elements or features did you prioritize in your design?': 'mostly I prayer I usually prefer HTML CSS in JavaScript and in some applications are usually use react JS', 'Interesting. Tell me about your approach to data visualization in your "Stock Prediction and Visualization" project. \n': 'so we actually to the date of from Wi-Fi and API and we have fine we are actually use the regression algorithm usually we actually use the regression algorithm to find the correlation between the data points and it gives a trend line for about 200 days for the future where it helps the investors to predict the future stocks and invest accordingly', "Let's start with a fundamental concept.  Can you explain what a data structure is, and give me an example of one you've used in a project? \n": 'so basically a data structure is a structure where we use the to store the data in the database and one of them is like the data structures which have learnt in the course workers stacks queues linked list and basically starts in involves last in first out the mechanism where the last element we have pushed into the stack will be the first one will be to be returned to the user', 'In your experience, what are the key differences between HTML and CSS?': 'HTML is a hypertext markup language and css is a cascading style sheet we use HTML to create a web page where as we use CSS towards styles to the web page and make it more visually attractive'}
     tech_score = analysis.technical_score(TQandA)
     BQandA = {"Let's say you're working on a complex project with a team, and you encounter a major obstacle. How do you approach the situation, and what steps would you take to overcome it? \n": 'well we actually find what are the issues with the project and will sort them out by by taking all the opinions within a team'}
     behavior_score = analysis.behavioral_score(BQandA)
     
     # print(project_score)
+    print("**************tech_score******************")
     print(tech_score)
+    print("**************beh_score******************")
+    print(behavior_score)
     # print(behavior_score)    
     
     data=pdf.generate_pdf(tech_score,project_score,project_rec,behavior_score,"/Users/surya/Documents/MockInterviews/src/backend/newpdf.pdf")
